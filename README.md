@@ -219,7 +219,7 @@ git clone https://github.com/itsurajx/rythem-app.git
 cd rythem-app
 
 # 2. Switch to active release branch
-git checkout release/v2.0.0
+git checkout release/v2.1.0
 
 # 3. Install dependencies
 flutter pub get

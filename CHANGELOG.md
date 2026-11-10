@@ -1,5 +1,11 @@
 # Release
 
+## v2.1.0
+- **Self-Paced & Scheduled Tracker Modes**: Added a `Tracker Mode` selector (`With Dates` vs. `No Dates`) when creating new tracks so learners can choose either scheduled start/target deadlines or open-ended, self-paced tracks with zero date pressure.
+- **Per-Tracker CSV Export & Topic Start Tracking**: Added a Download CSV action (`Icons.download_rounded`) inside each main tracker (`RoadmapDetailScreen` and `ExploreScreen` cards) to export `topic-name`, `topic start date`, `topic end date`, and `total number of days taken to finish that topic` to local storage, backed by a clean SQLite v3 `beats.started_at` migration.
+- **Creator & Contributors Card in Settings**: Added a Liquid Glass `CREATOR & CONTRIBUTORS` card in Settings fetching `@itsurajx`'s GitHub profile avatar, bio, and repository contributors with offline caching and graceful fallback.
+- **GitHub Repository Handle Migration**: Updated in-app update endpoints, fallback AI model download links, tests, and documentation from `ImSurajx/rythem-app` to `itsurajx/rythem-app`.
+
 ## v2.0.0
 - **User-Defined Beat & Effort Points Preservation**: Full Markdown and JSON syllabus parsing support for custom beat/effort weights across bracket notations (`[2.5]`, `[effort: 3.0]`, `[2.5 beats]`, `[2 pts]`), parenthetical notations (`(2.5)`, `(3 beats)`), delimiters (`| 2.5 beats`, `- 2.5 beats`, `: 2.5 beats`), and prefix notations.
 - **Accurate Roadmap Effort Accounting**: When creating tracks from syllabus files or pasted markdown, user-specified effort points are strictly honored and preserved when no resource is attached, cleanly reflecting total effort in pacing budgets, progress meters, and metrics dashboards.
