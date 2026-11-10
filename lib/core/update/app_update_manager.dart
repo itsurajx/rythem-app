@@ -54,7 +54,7 @@ class AppUpdateInfo {
 
 class AppUpdateManager {
   static const String currentVersion = 'v2.0.0';
-  static const String _releasesApiUrl = 'https://api.github.com/repos/ImSurajx/rythem-app/releases/latest';
+  static const String _releasesApiUrl = 'https://api.github.com/repos/itsurajx/rythem-app/releases/latest';
   static const MethodChannel _platformChannel = MethodChannel('com.rythem.rythem_app/storage_permission');
 
   static AppUpdateManager? _instance;
@@ -142,7 +142,7 @@ class AppUpdateManager {
       final tagName = data['tag_name'] as String? ?? '';
       final releaseName = data['name'] as String? ?? tagName;
       final body = data['body'] as String?;
-      final htmlUrl = data['html_url'] as String? ?? 'https://github.com/ImSurajx/rythem-app/releases';
+      final htmlUrl = data['html_url'] as String? ?? 'https://github.com/itsurajx/rythem-app/releases';
 
       String? apkUrl;
       int? apkSize;

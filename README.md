@@ -3,7 +3,7 @@
 # 🎵 Rythem
 ### The Ambient, User-Driven Learning Operating System & Curriculum Orchestrator
 
-[![Release](https://img.shields.io/github/v/release/ImSurajx/rythem-app?color=10B981&label=Release&logo=github)](https://github.com/ImSurajx/rythem-app/releases/latest)
+[![Release](https://img.shields.io/github/v/release/itsurajx/rythem-app?color=10B981&label=Release&logo=github)](https://github.com/itsurajx/rythem-app/releases/latest)
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter)](https://flutter.dev)
 [![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?logo=dart)](https://dart.dev)
 [![License: PolyForm Noncommercial 1.0.0](https://img.shields.io/badge/License-PolyForm_Noncommercial_1.0.0-blue.svg)](https://polyformproject.org/licenses/noncommercial/1.0.0)
@@ -215,7 +215,7 @@ For detailed architectural guidelines, review:
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/ImSurajx/rythem-app.git
+git clone https://github.com/itsurajx/rythem-app.git
 cd rythem-app
 
 # 2. Switch to active release branch

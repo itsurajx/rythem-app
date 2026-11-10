@@ -2239,7 +2239,7 @@ class _DesignSystemShowcaseScreenState
               // Interactive Changelog / Release Details Tile (Matching "Restore Snapshot" tile)
               InkWell(
                 onTap: () {
-                  final url = updateInfo?.htmlUrl ?? 'https://github.com/ImSurajx/rythem-app/releases';
+                  final url = updateInfo?.htmlUrl ?? 'https://github.com/itsurajx/rythem-app/releases';
                   ResourceLauncher.openResource(context, url: url, title: 'Release Notes');
                 },
                 borderRadius: BorderRadius.circular(12),
