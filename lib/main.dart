@@ -362,12 +362,22 @@ class _DesignSystemShowcaseScreenState
 
     final nextBeat = sortedBeats.where((b) => !b.isCompleted).firstOrNull;
     if (nextBeat != null) {
+      await _beatRepo.markBeatStarted(nextBeat.id);
       final updated = Map<String, String>.from(_activeFocusBeatByRoadmap);
       updated[roadmap.id] = nextBeat.id;
       await _appSettingsRepo.setSetting('active_focus_by_roadmap', jsonEncode(updated));
       if (mounted) {
         setState(() {
           _activeFocusBeatByRoadmap = updated;
+          if (nextBeat.startedAt == null) {
+            final startedNow = nextBeat.copyWith(startedAt: DateTime.now());
+            _beats = _beats.map((b) => b.id == nextBeat.id ? startedNow : b).toList();
+            final rmList = _beatsByRoadmap[roadmap.id];
+            if (rmList != null) {
+              _beatsByRoadmap[roadmap.id] =
+                  rmList.map((b) => b.id == nextBeat.id ? startedNow : b).toList();
+            }
+          }
         });
         _showToast('Pulled "${nextBeat.title}" into Today\'s Focus! 🎯');
       }
@@ -437,6 +447,7 @@ class _DesignSystemShowcaseScreenState
 
   Future<void> _handleSaveBeatProgress(BeatEntity beat, int newPercentage, String notes) async {
     HapticFeedback.mediumImpact();
+    await _beatRepo.markBeatStarted(beat.id);
     final oldPercentage = _beatProgressMap[beat.id] ?? 0;
     final clamped = newPercentage.clamp(0, 100);
 

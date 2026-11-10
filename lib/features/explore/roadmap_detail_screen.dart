@@ -21,6 +21,7 @@ import 'package:rythem_app/core/widgets/glass_toast.dart';
 import 'package:rythem_app/features/flow/confusing_beat_dialog.dart';
 import 'package:rythem_app/features/flow/session_detail_screen.dart';
 import '../../core/navigation/smooth_page_route.dart';
+import '../../core/backup/services/tracker_csv_export_service.dart';
 import '../../core/ingestion/services/curriculum_ingestion_service.dart';
 import 'widgets/chapter_accordion.dart';
 import '../../core/theme/animation_config.dart';
@@ -81,9 +82,11 @@ class _RoadmapDetailScreenState extends State<RoadmapDetailScreen> {
   final _beatRepo = BeatRepository();
   final _appSettingsRepo = AppSettingsRepository();
   final _ingestionService = CurriculumIngestionService();
+  final _csvExportService = const TrackerCsvExportService();
   StreamSubscription<DatabaseEvent>? _eventSub;
   bool _isAttaching = false;
   bool _isSyncing = false;
+  bool _isExportingCsv = false;
   Map<String, String> _beatNotes = {};
 
   @override
@@ -232,6 +235,39 @@ class _RoadmapDetailScreenState extends State<RoadmapDetailScreen> {
       }
     } finally {
       if (mounted) setState(() => _isSyncing = false);
+    }
+  }
+
+  Future<void> _handleExportCsv() async {
+    if (_isExportingCsv) return;
+    HapticFeedback.mediumImpact();
+    setState(() => _isExportingCsv = true);
+    try {
+      final exportedFile = await _csvExportService.exportTrackerCsvToFile(
+        roadmap: _currentRoadmap,
+        chapters: _currentChapters,
+        beats: _currentBeats,
+      );
+      if (!mounted) return;
+      if (exportedFile != null) {
+        showGlassToast(
+          context,
+          'Exported CSV: ${_csvExportService.suggestedFileName(_currentRoadmap)}',
+          icon: Icons.download_done_rounded,
+          accentColor: const Color(0xFF10B981),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        showGlassToast(
+          context,
+          'CSV export failed: $e',
+          icon: Icons.error_outline_rounded,
+          accentColor: Colors.redAccent,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isExportingCsv = false);
     }
   }
 
@@ -833,6 +869,42 @@ class _RoadmapDetailScreenState extends State<RoadmapDetailScreen> {
                           ),
                           if (!_currentRoadmap.isOpenLab) ...[
                             const SizedBox(width: 8),
+                            Tooltip(
+                              message: 'Export Tracker CSV',
+                              child: GestureDetector(
+                                onTap: _isExportingCsv ? null : _handleExportCsv,
+                                behavior: HitTestBehavior.opaque,
+                                child: Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.05),
+                                    border: Border.all(
+                                      color: isDark ? themeColors.glassBorderHighlight : const Color(0x28000000),
+                                      width: 0.9,
+                                    ),
+                                  ),
+                                  child: _isExportingCsv
+                                      ? Center(
+                                          child: SizedBox(
+                                            width: 14,
+                                            height: 14,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 1.8,
+                                              valueColor: AlwaysStoppedAnimation<Color>(themeColors.textPrimary),
+                                            ),
+                                          ),
+                                        )
+                                      : Icon(
+                                          Icons.download_rounded,
+                                          size: 16,
+                                          color: themeColors.textPrimary,
+                                        ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
                             Tooltip(
                               message: 'Sync & Remap Resources',
                               child: GestureDetector(

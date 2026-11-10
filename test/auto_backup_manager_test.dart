@@ -52,6 +52,7 @@ void main() {
         sort_order INTEGER NOT NULL,
         is_completed INTEGER NOT NULL DEFAULT 0,
         is_mentor_extra INTEGER NOT NULL DEFAULT 0,
+        started_at TEXT,
         completed_at TEXT,
         match_confidence REAL,
         syllabus_topic_id TEXT,

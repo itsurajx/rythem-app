@@ -243,6 +243,7 @@ void main() {
                 ${BeatColumns.effortWeight} REAL NOT NULL DEFAULT 1.0,
                 ${BeatColumns.sortOrder} INTEGER NOT NULL DEFAULT 0,
                 ${BeatColumns.isCompleted} INTEGER NOT NULL DEFAULT 0,
+                ${BeatColumns.startedAt} TEXT,
                 ${BeatColumns.completedAt} TEXT,
                 ${BeatColumns.isMentorExtra} INTEGER NOT NULL DEFAULT 0,
                 ${BeatColumns.matchConfidence} REAL,

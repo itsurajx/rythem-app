@@ -45,6 +45,7 @@ class BeatColumns {
   static const String effortWeight = 'effort_weight';
   static const String sortOrder = 'sort_order';
   static const String isCompleted = 'is_completed';
+  static const String startedAt = 'started_at';
   static const String completedAt = 'completed_at';
   static const String isMentorExtra = 'is_mentor_extra';
   static const String matchConfidence = 'match_confidence';

@@ -119,12 +119,18 @@ class BeatRepository {
       final current = BeatEntity.fromMap(beatQuery.first);
       final now = completedAt ?? DateTime.now();
       final todayDateStr = now.toIso8601String().substring(0, 10); // YYYY-MM-DD
+      final effectiveStartedAt = (isCompleted && current.startedAt == null)
+          ? now
+          : current.startedAt;
 
-      final updatedValues = {
+      final updatedValues = <String, dynamic>{
         BeatColumns.isCompleted: isCompleted ? 1 : 0,
         BeatColumns.completedAt: isCompleted ? now.toIso8601String() : null,
         BeatColumns.updatedAt: now.toIso8601String(),
       };
+      if (isCompleted && current.startedAt == null) {
+        updatedValues[BeatColumns.startedAt] = now.toIso8601String();
+      }
 
       await txn.update(
         DatabaseTables.beats,
@@ -156,6 +162,7 @@ class BeatRepository {
 
       updatedBeat = current.copyWith(
         isCompleted: isCompleted,
+        startedAt: effectiveStartedAt,
         completedAt: isCompleted ? now : null,
         clearCompletedAt: !isCompleted,
         updatedAt: now,
@@ -172,6 +179,22 @@ class BeatRepository {
     }
 
     return updatedBeat;
+  }
+
+  /// Records the first time a beat was started (pulled into focus or checkpointed).
+  /// Leaves an existing `started_at` timestamp untouched.
+  Future<void> markBeatStarted(String beatId, {DateTime? startedAt}) async {
+    final db = await _db;
+    final timestamp = (startedAt ?? DateTime.now()).toIso8601String();
+    await db.update(
+      DatabaseTables.beats,
+      {
+        BeatColumns.startedAt: timestamp,
+        BeatColumns.updatedAt: timestamp,
+      },
+      where: '${BeatColumns.id} = ? AND ${BeatColumns.startedAt} IS NULL',
+      whereArgs: [beatId],
+    );
   }
 
   /// Computes remaining effort weight across incomplete beats.
@@ -336,6 +359,7 @@ class BeatRepository {
         effortWeight: effortWeight,
         sortOrder: targetSortOrder,
         isCompleted: isCompleted,
+        startedAt: now,
         completedAt: isCompleted ? now : null,
         isMentorExtra: false,
         syllabusTopicId: 'custom:${category.trim().isEmpty ? 'Revision' : category.trim()}',

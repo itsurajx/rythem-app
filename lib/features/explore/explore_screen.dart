@@ -8,8 +8,10 @@ import 'package:rythem_app/core/theme/typography.dart';
 import 'package:rythem_app/core/widgets/glass_button.dart';
 import 'package:rythem_app/core/widgets/glass_card.dart';
 import 'package:rythem_app/core/widgets/glass_progress_bar.dart';
+import '../../core/backup/services/tracker_csv_export_service.dart';
 import '../../core/navigation/smooth_page_route.dart';
 import '../../core/theme/animation_config.dart';
+import '../../core/widgets/glass_toast.dart';
 import '../flow/checkpoint_dialog.dart';
 import '../flow/confusing_beat_dialog.dart';
 import 'new_track_modal.dart';
@@ -61,6 +63,7 @@ class ExploreScreen extends StatefulWidget {
   final Future<void> Function(String roadmapId, String resourceUrl, {String? chapterId})? onAttachResource;
   final Future<void> Function(String beatId, String resourceUrl)? onAttachResourceToBeat;
   final void Function(RoadmapEntity roadmap)? onOpenRoadmapDetail;
+  final Future<void> Function(RoadmapEntity roadmap)? onExportTrackerCsv;
 
   const ExploreScreen({
     super.key,
@@ -79,6 +82,7 @@ class ExploreScreen extends StatefulWidget {
     this.onAttachResource,
     this.onAttachResourceToBeat,
     this.onOpenRoadmapDetail,
+    this.onExportTrackerCsv,
   });
 
   @override
@@ -92,6 +96,40 @@ class _ExploreScreenState extends State<ExploreScreen> {
   final _notesSearchController = TextEditingController();
   String _notesSearchQuery = '';
   String? _selectedNotesRoadmapId;
+  final _csvExportService = const TrackerCsvExportService();
+
+  Future<void> _exportTrackerCsv(BuildContext context, RoadmapEntity roadmap) async {
+    HapticFeedback.mediumImpact();
+    if (widget.onExportTrackerCsv != null) {
+      await widget.onExportTrackerCsv!(roadmap);
+      return;
+    }
+    try {
+      final exportedFile = await _csvExportService.exportTrackerCsvToFile(
+        roadmap: roadmap,
+        chapters: widget.chaptersByRoadmap[roadmap.id] ?? const [],
+        beats: widget.beatsByRoadmap[roadmap.id] ?? const [],
+      );
+      if (!context.mounted) return;
+      if (exportedFile != null) {
+        showGlassToast(
+          context,
+          'Exported CSV: ${_csvExportService.suggestedFileName(roadmap)}',
+          icon: Icons.download_done_rounded,
+          accentColor: const Color(0xFF10B981),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        showGlassToast(
+          context,
+          'CSV export failed: $e',
+          icon: Icons.error_outline_rounded,
+          accentColor: Colors.redAccent,
+        );
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -462,6 +500,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
                     themeColors: themeColors,
                     isDark: isDark,
                     onTap: () => _openRoadmapDetail(roadmap),
+                    onExportCsv: !roadmap.isOpenLab
+                        ? () => _exportTrackerCsv(context, roadmap)
+                        : null,
                     onDelete: widget.onDeleteRoadmap != null
                         ? () => _confirmDeleteRoadmap(context, roadmap)
                         : null,
@@ -1137,6 +1178,7 @@ class _RoadmapExploreCard extends StatelessWidget {
   final RythemColorTokens themeColors;
   final bool isDark;
   final VoidCallback onTap;
+  final VoidCallback? onExportCsv;
   final VoidCallback? onDelete;
 
   const _RoadmapExploreCard({
@@ -1149,6 +1191,7 @@ class _RoadmapExploreCard extends StatelessWidget {
     required this.themeColors,
     required this.isDark,
     required this.onTap,
+    this.onExportCsv,
     this.onDelete,
   });
 
@@ -1208,6 +1251,24 @@ class _RoadmapExploreCard extends StatelessWidget {
                         ),
                       ),
                     ),
+                    if (onExportCsv != null) ...[
+                      const SizedBox(width: 6),
+                      Tooltip(
+                        message: 'Export Tracker CSV',
+                        child: GestureDetector(
+                          onTap: onExportCsv,
+                          behavior: HitTestBehavior.opaque,
+                          child: Padding(
+                            padding: const EdgeInsets.all(4),
+                            child: Icon(
+                              Icons.download_rounded,
+                              size: 16,
+                              color: themeColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                     if (onDelete != null) ...[
                       const SizedBox(width: 6),
                       GestureDetector(

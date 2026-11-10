@@ -10,6 +10,7 @@ class BeatEntity {
   final double effortWeight;
   final int sortOrder;
   final bool isCompleted;
+  final DateTime? startedAt;
   final DateTime? completedAt;
   final bool isMentorExtra;
   final double? matchConfidence;
@@ -47,6 +48,7 @@ class BeatEntity {
     this.effortWeight = 1.0,
     this.sortOrder = 0,
     this.isCompleted = false,
+    this.startedAt,
     this.completedAt,
     this.isMentorExtra = false,
     this.matchConfidence,
@@ -65,6 +67,8 @@ class BeatEntity {
     double? effortWeight,
     int? sortOrder,
     bool? isCompleted,
+    DateTime? startedAt,
+    bool clearStartedAt = false,
     DateTime? completedAt,
     bool clearCompletedAt = false,
     bool? isMentorExtra,
@@ -83,6 +87,7 @@ class BeatEntity {
       effortWeight: effortWeight ?? this.effortWeight,
       sortOrder: sortOrder ?? this.sortOrder,
       isCompleted: isCompleted ?? this.isCompleted,
+      startedAt: clearStartedAt ? null : (startedAt ?? this.startedAt),
       completedAt: clearCompletedAt ? null : (completedAt ?? this.completedAt),
       isMentorExtra: isMentorExtra ?? this.isMentorExtra,
       matchConfidence: matchConfidence ?? this.matchConfidence,
@@ -93,7 +98,7 @@ class BeatEntity {
   }
 
   Map<String, dynamic> toMap() {
-    return {
+    final map = <String, dynamic>{
       BeatColumns.id: id,
       BeatColumns.chapterId: chapterId,
       BeatColumns.roadmapId: roadmapId,
@@ -110,6 +115,10 @@ class BeatEntity {
       BeatColumns.createdAt: createdAt.toIso8601String(),
       BeatColumns.updatedAt: updatedAt.toIso8601String(),
     };
+    if (startedAt != null) {
+      map[BeatColumns.startedAt] = startedAt!.toIso8601String();
+    }
+    return map;
   }
 
   factory BeatEntity.fromMap(Map<String, dynamic> map) {
@@ -123,6 +132,9 @@ class BeatEntity {
       effortWeight: (map[BeatColumns.effortWeight] as num?)?.toDouble() ?? 1.0,
       sortOrder: (map[BeatColumns.sortOrder] as int?) ?? 0,
       isCompleted: (map[BeatColumns.isCompleted] as int?) == 1,
+      startedAt: map[BeatColumns.startedAt] != null
+          ? DateTime.parse(map[BeatColumns.startedAt] as String)
+          : null,
       completedAt: map[BeatColumns.completedAt] != null
           ? DateTime.parse(map[BeatColumns.completedAt] as String)
           : null,

@@ -5,7 +5,7 @@ import 'tables.dart';
 
 class DatabaseService {
   static const String _databaseName = 'rythem.db';
-  static const int _databaseVersion = 2;
+  static const int _databaseVersion = 3;
 
   DatabaseService._();
 
@@ -93,6 +93,7 @@ class DatabaseService {
         ${BeatColumns.effortWeight} REAL NOT NULL DEFAULT 1.0,
         ${BeatColumns.sortOrder} INTEGER NOT NULL DEFAULT 0,
         ${BeatColumns.isCompleted} INTEGER NOT NULL DEFAULT 0,
+        ${BeatColumns.startedAt} TEXT,
         ${BeatColumns.completedAt} TEXT,
         ${BeatColumns.isMentorExtra} INTEGER NOT NULL DEFAULT 0,
         ${BeatColumns.matchConfidence} REAL,
@@ -158,6 +159,12 @@ class DatabaseService {
       await db.execute('''
         ALTER TABLE ${DatabaseTables.roadmaps}
         ADD COLUMN ${RoadmapColumns.startDate} TEXT;
+      ''');
+    }
+    if (oldVersion < 3) {
+      await db.execute('''
+        ALTER TABLE ${DatabaseTables.beats}
+        ADD COLUMN ${BeatColumns.startedAt} TEXT;
       ''');
     }
   }
