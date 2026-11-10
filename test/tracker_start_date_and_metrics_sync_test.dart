@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:rythem_app/core/database/database.dart';
+import 'package:rythem_app/core/ingestion/ingestion.dart';
+import 'package:rythem_app/core/ingestion/parsers/syllabus_parser.dart';
 import 'package:rythem_app/core/pacing/pacing.dart';
 import 'package:rythem_app/core/theme/colors.dart';
 import 'package:rythem_app/core/theme/theme.dart';
@@ -178,6 +180,36 @@ void main() {
       expect(await chapterRepo.getChaptersByRoadmapId(rm.id), isEmpty);
       expect(await beatRepo.getBeatsByRoadmapId(rm.id), isEmpty);
       expect(await beatLogRepo.getTotalBeatsCompleted(), 0);
+    });
+
+    test('Undated self-paced syllabus track preserves null startDate and targetCompletionDate', () async {
+      final roadmapRepo = RoadmapRepository();
+      final ingestionService = CurriculumIngestionService();
+      final pacingService = PacingService();
+
+      final parsed = SyllabusParser.parse(
+        '# Module 1\n- Topic A [1.5 beats]\n- Topic B [2.0 beats]',
+        defaultTitle: 'Self-Paced Track',
+      );
+
+      final result = await ingestionService.ingestFromSyllabus(
+        title: 'Self-Paced Track',
+        category: 'Engineering',
+        startDate: null,
+        targetDate: null,
+        syllabus: parsed,
+      );
+
+      final saved = await roadmapRepo.getRoadmapById(result.roadmapId);
+      expect(saved, isNotNull);
+      expect(saved!.startDate, isNull);
+      expect(saved.targetCompletionDate, isNull);
+
+      final budget = await pacingService.computePacingBudget(saved.id);
+      expect(budget.isUpcoming, isFalse);
+      expect(budget.daysLeft, 0);
+      expect(budget.todayEffortShare, 0.0);
+      expect(budget.remainingEffort, 3.5);
     });
   });
 

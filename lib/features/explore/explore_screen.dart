@@ -51,7 +51,7 @@ class ExploreScreen extends StatefulWidget {
     required String title,
     required String category,
     DateTime? startDate,
-    required DateTime targetDate,
+    DateTime? targetDate,
     String? resourceUrl,
     String? syllabusText,
   }) onCreateTrack;

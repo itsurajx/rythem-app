@@ -15,7 +15,7 @@ class NewTrackModal extends StatefulWidget {
     required String title,
     required String category,
     DateTime? startDate,
-    required DateTime targetDate,
+    DateTime? targetDate,
     String? resourceUrl,
     String? syllabusText,
   }) onCreateTrack;
@@ -31,7 +31,7 @@ class NewTrackModal extends StatefulWidget {
       required String title,
       required String category,
       DateTime? startDate,
-      required DateTime targetDate,
+      DateTime? targetDate,
       String? resourceUrl,
       String? syllabusText,
     }) onCreateTrack,
@@ -54,6 +54,7 @@ class _NewTrackModalState extends State<NewTrackModal> {
   final _syllabusController = TextEditingController();
   bool _showSyllabusInput = false;
   String _selectedCategory = 'Engineering';
+  bool _useScheduleDates = true;
   DateTime _startDate = DateTime.now();
   DateTime _targetDate = DateTime.now().add(const Duration(days: 14));
   bool _isLoading = false;
@@ -234,8 +235,8 @@ class _NewTrackModalState extends State<NewTrackModal> {
       await widget.onCreateTrack(
         title: title,
         category: _selectedCategory,
-        startDate: _startDate,
-        targetDate: _targetDate,
+        startDate: _useScheduleDates ? _startDate : null,
+        targetDate: _useScheduleDates ? _targetDate : null,
         resourceUrl: resourceUrl,
         syllabusText: syllabusText,
       );
@@ -481,116 +482,203 @@ class _NewTrackModalState extends State<NewTrackModal> {
 
               const SizedBox(height: 16),
 
-              // Start Date & Target Date Selection Cards
-              Row(
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: _pickStartDate,
-                      behavior: HitTestBehavior.opaque,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? Colors.white.withOpacity(0.04)
-                              : Colors.black.withOpacity(0.025),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: isDark ? themeColors.glassBorder : const Color(0x14000000),
-                            width: 0.8,
-                          ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'START DATE',
-                                  style: RythemTypography.labelSmall.copyWith(
-                                    color: themeColors.textTertiary,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                                Icon(
-                                  Icons.calendar_today_outlined,
-                                  size: 13,
-                                  color: themeColors.textSecondary,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 5),
-                            Text(
-                              '${_startDate.year}-${_startDate.month.toString().padLeft(2, '0')}-${_startDate.day.toString().padLeft(2, '0')}',
-                              style: RythemTypography.titleSmall.copyWith(
-                                color: themeColors.textPrimary,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: _pickTargetDate,
-                      behavior: HitTestBehavior.opaque,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? Colors.white.withOpacity(0.04)
-                              : Colors.black.withOpacity(0.025),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: isDark ? themeColors.glassBorder : const Color(0x14000000),
-                            width: 0.8,
-                          ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'TARGET DATE',
-                                  style: RythemTypography.labelSmall.copyWith(
-                                    color: themeColors.textTertiary,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                                Icon(
-                                  Icons.flag_outlined,
-                                  size: 14,
-                                  color: themeColors.textSecondary,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 5),
-                            Text(
-                              '${_targetDate.year}-${_targetDate.month.toString().padLeft(2, '0')}-${_targetDate.day.toString().padLeft(2, '0')}',
-                              style: RythemTypography.titleSmall.copyWith(
-                                color: themeColors.textPrimary,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+              // Tracker Schedule Type Selector
+              Text(
+                'Tracker Mode',
+                style: RythemTypography.labelSmall.copyWith(
+                  color: themeColors.textSecondary,
+                  fontSize: 11,
+                ),
               ),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? Colors.white.withOpacity(0.04)
+                      : Colors.black.withOpacity(0.03),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: isDark ? themeColors.glassBorder : const Color(0x14000000),
+                    width: 0.8,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    _buildScheduleModeOption(
+                      label: 'With Dates',
+                      icon: Icons.date_range_rounded,
+                      selected: _useScheduleDates,
+                      themeColors: themeColors,
+                      isDark: isDark,
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        setState(() => _useScheduleDates = true);
+                      },
+                    ),
+                    const SizedBox(width: 4),
+                    _buildScheduleModeOption(
+                      label: 'No Dates',
+                      icon: Icons.all_inclusive_rounded,
+                      selected: !_useScheduleDates,
+                      themeColors: themeColors,
+                      isDark: isDark,
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        setState(() => _useScheduleDates = false);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              if (_useScheduleDates) ...[
+                // Start Date & Target Date Selection Cards
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: _pickStartDate,
+                        behavior: HitTestBehavior.opaque,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? Colors.white.withOpacity(0.04)
+                                : Colors.black.withOpacity(0.025),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: isDark ? themeColors.glassBorder : const Color(0x14000000),
+                              width: 0.8,
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'START DATE',
+                                    style: RythemTypography.labelSmall.copyWith(
+                                      color: themeColors.textTertiary,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                  Icon(
+                                    Icons.calendar_today_outlined,
+                                    size: 13,
+                                    color: themeColors.textSecondary,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 5),
+                              Text(
+                                '${_startDate.year}-${_startDate.month.toString().padLeft(2, '0')}-${_startDate.day.toString().padLeft(2, '0')}',
+                                style: RythemTypography.titleSmall.copyWith(
+                                  color: themeColors.textPrimary,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: _pickTargetDate,
+                        behavior: HitTestBehavior.opaque,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? Colors.white.withOpacity(0.04)
+                                : Colors.black.withOpacity(0.025),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: isDark ? themeColors.glassBorder : const Color(0x14000000),
+                              width: 0.8,
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'TARGET DATE',
+                                    style: RythemTypography.labelSmall.copyWith(
+                                      color: themeColors.textTertiary,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                  Icon(
+                                    Icons.flag_outlined,
+                                    size: 14,
+                                    color: themeColors.textSecondary,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 5),
+                              Text(
+                                '${_targetDate.year}-${_targetDate.month.toString().padLeft(2, '0')}-${_targetDate.day.toString().padLeft(2, '0')}',
+                                style: RythemTypography.titleSmall.copyWith(
+                                  color: themeColors.textPrimary,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ] else ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.white.withOpacity(0.04)
+                        : Colors.black.withOpacity(0.025),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: isDark ? themeColors.glassBorder : const Color(0x14000000),
+                      width: 0.8,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.all_inclusive_rounded,
+                        size: 16,
+                        color: themeColors.textSecondary,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'Self-paced tracker without start or end dates.',
+                          style: RythemTypography.bodySmall.copyWith(
+                            color: themeColors.textSecondary,
+                            fontSize: 11.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: 16),
 
               // Optional Resource URL
@@ -804,6 +892,60 @@ class _NewTrackModalState extends State<NewTrackModal> {
                   variant: GlassButtonVariant.primary,
                   isLoading: _isLoading,
                   onPressed: _isLoading ? () {} : _submit,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildScheduleModeOption({
+    required String label,
+    required IconData icon,
+    required bool selected,
+    required RythemThemeColors themeColors,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 10),
+          decoration: BoxDecoration(
+            color: selected
+                ? (isDark ? Colors.white.withOpacity(0.14) : Colors.black.withOpacity(0.09))
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+            border: selected
+                ? Border.all(
+                    color: isDark ? themeColors.glassBorderHighlight : Colors.black54,
+                    width: 0.9,
+                  )
+                : null,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 14,
+                color: selected ? themeColors.textPrimary : themeColors.textTertiary,
+              ),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  label,
+                  overflow: TextOverflow.ellipsis,
+                  style: RythemTypography.labelSmall.copyWith(
+                    color: selected ? themeColors.textPrimary : themeColors.textTertiary,
+                    fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                    fontSize: 11.5,
+                  ),
                 ),
               ),
             ],

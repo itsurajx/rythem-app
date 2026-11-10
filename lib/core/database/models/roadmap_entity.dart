@@ -35,7 +35,9 @@ class RoadmapEntity {
     String? title,
     String? description,
     DateTime? startDate,
+    bool clearStartDate = false,
     DateTime? targetCompletionDate,
+    bool clearTargetCompletionDate = false,
     String? status,
     bool? isPrimary,
     DateTime? createdAt,
@@ -45,8 +47,10 @@ class RoadmapEntity {
       id: id ?? this.id,
       title: title ?? this.title,
       description: description ?? this.description,
-      startDate: startDate ?? this.startDate,
-      targetCompletionDate: targetCompletionDate ?? this.targetCompletionDate,
+      startDate: clearStartDate ? null : (startDate ?? this.startDate),
+      targetCompletionDate: clearTargetCompletionDate
+          ? null
+          : (targetCompletionDate ?? this.targetCompletionDate),
       status: status ?? this.status,
       isPrimary: isPrimary ?? this.isPrimary,
       createdAt: createdAt ?? this.createdAt,

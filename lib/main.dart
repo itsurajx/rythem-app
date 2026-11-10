@@ -1168,7 +1168,7 @@ class _DesignSystemShowcaseScreenState
     required String title,
     required String category,
     DateTime? startDate,
-    required DateTime targetDate,
+    DateTime? targetDate,
     String? resourceUrl,
     String? syllabusText,
   }) async {
@@ -1196,7 +1196,7 @@ class _DesignSystemShowcaseScreenState
         id: id,
         title: title,
         description: category,
-        startDate: startDate ?? DateTime.now(),
+        startDate: startDate,
         targetCompletionDate: targetDate,
         status: 'active',
         createdAt: DateTime.now(),

@@ -115,7 +115,7 @@ void main() {
                 required String title,
                 required String category,
                 DateTime? startDate,
-                required DateTime targetDate,
+                DateTime? targetDate,
                 String? resourceUrl,
                 String? syllabusText,
               }) async {},
@@ -152,7 +152,7 @@ void main() {
                 required String title,
                 required String category,
                 DateTime? startDate,
-                required DateTime targetDate,
+                DateTime? targetDate,
                 String? resourceUrl,
                 String? syllabusText,
               }) async {},
@@ -183,6 +183,7 @@ void main() {
       String? createdTitle;
       String? createdCategory;
       DateTime? createdStartDate;
+      DateTime? createdTargetDate;
 
       await tester.pumpWidget(
         MaterialApp(
@@ -198,13 +199,14 @@ void main() {
                         required String title,
                         required String category,
                         DateTime? startDate,
-                        required DateTime targetDate,
+                        DateTime? targetDate,
                         String? resourceUrl,
                         String? syllabusText,
                       }) async {
                         createdTitle = title;
                         createdCategory = category;
                         createdStartDate = startDate;
+                        createdTargetDate = targetDate;
                       },
                     );
                   },
@@ -221,6 +223,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('CREATE NEW TRACK'), findsOneWidget);
+      expect(find.text('With Dates'), findsOneWidget);
+      expect(find.text('No Dates'), findsOneWidget);
       expect(find.text('START DATE'), findsOneWidget);
       expect(find.text('TARGET DATE'), findsOneWidget);
 
@@ -233,12 +237,75 @@ void main() {
       await tester.pump();
 
       // Tap Create New Track
+      await tester.ensureVisible(find.text('Create New Track'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Create New Track'));
       await tester.pumpAndSettle();
 
       expect(createdTitle, 'Quantum Computing Basics');
       expect(createdCategory, 'Mathematics');
       expect(createdStartDate, isNotNull);
+      expect(createdTargetDate, isNotNull);
+    });
+
+    testWidgets('submits self-paced track without start or target date when No Dates is selected', (tester) async {
+      String? createdTitle;
+      DateTime? createdStartDate = DateTime(2025);
+      DateTime? createdTargetDate = DateTime(2025);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: RythemTheme.darkTheme,
+          home: Scaffold(
+            body: Builder(
+              builder: (ctx) => Center(
+                child: ElevatedButton(
+                  onPressed: () {
+                    NewTrackModal.show(
+                      ctx,
+                      onCreateTrack: ({
+                        required String title,
+                        required String category,
+                        DateTime? startDate,
+                        DateTime? targetDate,
+                        String? resourceUrl,
+                        String? syllabusText,
+                      }) async {
+                        createdTitle = title;
+                        createdStartDate = startDate;
+                        createdTargetDate = targetDate;
+                      },
+                    );
+                  },
+                  child: const Text('Open Modal'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Open Modal'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField).first, 'Rust Explorations');
+      await tester.pump();
+
+      await tester.ensureVisible(find.text('No Dates'));
+      await tester.tap(find.text('No Dates'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('START DATE'), findsNothing);
+      expect(find.text('TARGET DATE'), findsNothing);
+      expect(find.text('Self-paced tracker without start or end dates.'), findsOneWidget);
+
+      await tester.ensureVisible(find.text('Create New Track'));
+      await tester.tap(find.text('Create New Track'));
+      await tester.pumpAndSettle();
+
+      expect(createdTitle, 'Rust Explorations');
+      expect(createdStartDate, isNull);
+      expect(createdTargetDate, isNull);
     });
   });
 
@@ -332,7 +399,7 @@ void main() {
               chaptersByRoadmap: {'rm_1': [testChapter1]},
               beatsByRoadmap: {'rm_1': testBeats},
               onBeatToggled: (_, __) async {},
-              onCreateTrack: ({required title, required category, startDate, required targetDate, resourceUrl, syllabusText}) async {},
+              onCreateTrack: ({required title, required category, startDate, targetDate, resourceUrl, syllabusText}) async {},
               onOpenRoadmapDetail: (rm) => openedRoadmap = rm,
             ),
           ),
@@ -363,7 +430,7 @@ void main() {
               beatNotesMap: const {'b2': 'Need to revisit Paxos vs Raft consensus trade-offs.'},
               beatProgressMap: const {'b2': 80},
               onBeatToggled: (_, __) async {},
-              onCreateTrack: ({required title, required category, startDate, required targetDate, resourceUrl, syllabusText}) async {},
+              onCreateTrack: ({required title, required category, startDate, targetDate, resourceUrl, syllabusText}) async {},
             ),
           ),
         ),
@@ -412,7 +479,7 @@ void main() {
                 savedBeatParam = beat;
                 savedNoteParam = note;
               },
-              onCreateTrack: ({required title, required category, startDate, required targetDate, resourceUrl, syllabusText}) async {},
+              onCreateTrack: ({required title, required category, startDate, targetDate, resourceUrl, syllabusText}) async {},
             ),
           ),
         ),

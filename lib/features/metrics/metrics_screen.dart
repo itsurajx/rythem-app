@@ -431,6 +431,14 @@ class _TrackOverviewCard extends StatelessWidget {
                       color: themeColors.textTertiary,
                       fontSize: 10.5,
                     ),
+                  )
+                else if (!roadmap.isOpenLab && roadmap.targetCompletionDate == null && roadmap.startDate == null)
+                  Text(
+                    'Self-paced',
+                    style: RythemTypography.labelSmall.copyWith(
+                      color: themeColors.textTertiary,
+                      fontSize: 10.5,
+                    ),
                   ),
               ],
             ),
