@@ -24,6 +24,7 @@ import 'core/backup/services/storage_permission_service.dart';
 import 'core/navigation/smooth_page_route.dart';
 import 'core/update/app_update_manager.dart';
 import 'core/utils/resource_launcher.dart';
+import 'features/settings/widgets/creator_contributors_card.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -1589,6 +1590,20 @@ class _DesignSystemShowcaseScreenState
           ),
           const SizedBox(height: 8),
           _buildAppUpdatesCard(themeColors, isDark),
+          const SizedBox(height: 24),
+
+          // 5. Creator & Contributors
+          Text(
+            'CREATOR & CONTRIBUTORS',
+            style: RythemTypography.labelSmall.copyWith(
+              color: themeColors.textSecondary,
+              letterSpacing: 1.0,
+              fontWeight: FontWeight.w600,
+              fontSize: 11,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const CreatorContributorsCard(),
           const SizedBox(height: 24),
 
           // Quiet Version Metadata
