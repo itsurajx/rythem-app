@@ -346,7 +346,7 @@ class _PerformanceGraphsCardState extends State<PerformanceGraphsCard> {
                                     ? (widget.isDark ? Colors.white : Colors.black)
                                     : (widget.isDark ? Colors.white.withOpacity(0.12) : Colors.black.withOpacity(0.08)))
                                 : (day.count > 0
-                                    ? (widget.isDark ? Colors.white.withOpacity(0.35) : Colors.black.withOpacity(0.35))
+                                    ? (widget.isDark ? Colors.white.withOpacity(0.35) : Colors.black)
                                     : (widget.isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.06))),
                             border: isToday
                                 ? Border.all(

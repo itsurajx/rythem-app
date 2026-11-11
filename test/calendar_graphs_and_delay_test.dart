@@ -196,6 +196,45 @@ void main() {
       expect(find.text('0.0 ⚡/d'), findsOneWidget);
       expect(find.text('0 / 7d'), findsOneWidget);
     });
+
+    testWidgets('7-day beat graph renders non-today active bars in solid black in light mode', (tester) async {
+      final now = DateTime.now();
+      final activity = List.generate(7, (i) {
+        final d = now.subtract(Duration(days: 6 - i));
+        final dateStr = '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+        // Make day index 2 (non-today) have completed beats
+        return DailyBeatCount(
+          date: dateStr,
+          count: i == 2 ? 2 : 0,
+          effort: i == 2 ? 3.0 : 0.0,
+        );
+      });
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: RythemTheme.lightTheme,
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: PerformanceGraphsCard(
+                recentActivity: activity,
+                themeColors: RythemColors.light,
+                isDark: false,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final barContainers = tester.widgetList<Container>(find.byType(Container)).where((c) {
+        final dec = c.decoration;
+        return dec is BoxDecoration && dec.borderRadius == BorderRadius.circular(7);
+      }).toList();
+
+      expect(barContainers, hasLength(7));
+      final activeBarDecoration = barContainers[2].decoration! as BoxDecoration;
+      expect(activeBarDecoration.color, Colors.black);
+    });
   });
 
   group('Task Delay Workflow in FlowScreen Tests', () {
