@@ -13,6 +13,7 @@ class RawResourceItem {
   final int index;
   final String? description;
   final String? thumbnailUrl;
+  final String? author;
 
   const RawResourceItem({
     required this.title,
@@ -22,7 +23,30 @@ class RawResourceItem {
     required this.index,
     this.description,
     this.thumbnailUrl,
+    this.author,
   });
+
+  RawResourceItem copyWith({
+    String? title,
+    String? sourceUrl,
+    int? timestampSeconds,
+    int? durationSeconds,
+    int? index,
+    String? description,
+    String? thumbnailUrl,
+    String? author,
+  }) {
+    return RawResourceItem(
+      title: title ?? this.title,
+      sourceUrl: sourceUrl ?? this.sourceUrl,
+      timestampSeconds: timestampSeconds ?? this.timestampSeconds,
+      durationSeconds: durationSeconds ?? this.durationSeconds,
+      index: index ?? this.index,
+      description: description ?? this.description,
+      thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
+      author: author ?? this.author,
+    );
+  }
 }
 
 class ExtractedResource {

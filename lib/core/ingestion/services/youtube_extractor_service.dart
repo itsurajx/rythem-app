@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:youtube_explode_dart/youtube_explode_dart.dart' as yt;
 import '../models/extracted_resource.dart';
+import '../parsers/playlist_order_normalizer.dart';
 import '../parsers/timestamp_parser.dart';
 
 abstract class IYoutubeClient {
@@ -186,6 +187,7 @@ class YoutubeExtractorService implements IYoutubeClient {
             index: index++,
             description: video.description,
             thumbnailUrl: video.thumbnails.highResUrl,
+            author: video.author,
           ));
         }
       } catch (e) {
@@ -203,13 +205,15 @@ class YoutubeExtractorService implements IYoutubeClient {
       );
     }
 
+    final normalizedItems = PlaylistOrderNormalizer.normalize(rawItems);
+
     return ExtractedResource(
       title: playlistTitle,
       description: playlistDescription,
       author: playlistAuthor,
       sourceUrl: 'https://www.youtube.com/playlist?list=$playlistId',
       resourceType: ExtractedResourceType.playlist,
-      items: rawItems,
+      items: normalizedItems,
     );
   }
 
@@ -283,77 +287,38 @@ class YoutubeExtractorService implements IYoutubeClient {
         void parseNodes(dynamic node, String path) {
           if (node is Map<String, dynamic>) {
             if (node.containsKey('lockupViewModel')) {
-              final lvm = node['lockupViewModel'] as Map<String, dynamic>;
-              final videoId = lvm['contentId']?.toString() ?? '';
-              final title = lvm['metadata']?['lockupMetadataViewModel']?['title']?['content']?.toString() ?? '';
-
-              int seconds = 0;
-              String thumbnailUrl = '';
-
-              final sources = lvm['contentImage']?['thumbnailViewModel']?['image']?['sources'] as List?;
-              if (sources != null && sources.isNotEmpty) {
-                thumbnailUrl = sources.last['url']?.toString() ?? '';
-              }
-
-              final overlays = lvm['contentImage']?['thumbnailViewModel']?['overlays'] as List?;
-              if (overlays != null) {
-                for (final o in overlays) {
-                  final badge = o['thumbnailBottomOverlayViewModel']?['badges']?[0]?['thumbnailBadgeViewModel'];
-                  if (badge != null && badge['text'] != null) {
-                    final durationStr = badge['text'].toString();
-                    final parts = durationStr.split(':').map(int.tryParse).toList();
-                    if (parts.length == 2 && parts[0] != null && parts[1] != null) {
-                      seconds = (parts[0]! * 60) + parts[1]!;
-                    } else if (parts.length == 3 && parts[0] != null && parts[1] != null && parts[2] != null) {
-                      seconds = (parts[0]! * 3600) + (parts[1]! * 60) + parts[2]!;
-                    }
-                  }
-                }
-              }
-
-              if (videoId.isNotEmpty && title.isNotEmpty && !seenVideoIds.contains(videoId)) {
-                seenVideoIds.add(videoId);
-                items.add(RawResourceItem(
-                  title: title,
-                  sourceUrl: 'https://www.youtube.com/watch?v=$videoId&list=$playlistId',
-                  durationSeconds: seconds > 0 ? seconds : 600,
-                  index: index++,
-                  thumbnailUrl: thumbnailUrl,
-                ));
+              final item = _parseLockupItem(
+                node['lockupViewModel'] as Map<String, dynamic>,
+                playlistId: playlistId,
+                index: index,
+                seenVideoIds: seenVideoIds,
+              );
+              if (item != null) {
+                items.add(item);
+                index++;
               }
             } else if (node.containsKey('playlistVideoRenderer')) {
-              final pvr = node['playlistVideoRenderer'] as Map<String, dynamic>;
-              final videoId = pvr['videoId']?.toString() ?? '';
-              final titleRuns = pvr['title']?['runs'] as List?;
-              final title = titleRuns?.map((r) => r['text']).join('') ?? pvr['title']?['simpleText']?.toString() ?? '';
-              final lengthSec = int.tryParse(pvr['lengthSeconds']?.toString() ?? '') ?? 600;
-
-              if (videoId.isNotEmpty && title.isNotEmpty && !seenVideoIds.contains(videoId)) {
-                seenVideoIds.add(videoId);
-                items.add(RawResourceItem(
-                  title: title,
-                  sourceUrl: 'https://www.youtube.com/watch?v=$videoId&list=$playlistId',
-                  durationSeconds: lengthSec,
-                  index: index++,
-                  thumbnailUrl: 'https://i.ytimg.com/vi/$videoId/hqdefault.jpg',
-                ));
+              final item = _parseVideoRendererItem(
+                node['playlistVideoRenderer'] as Map<String, dynamic>,
+                playlistId: playlistId,
+                index: index,
+                seenVideoIds: seenVideoIds,
+              );
+              if (item != null) {
+                items.add(item);
+                index++;
               }
             } else if (node.containsKey('gridVideoRenderer') || node.containsKey('videoRenderer')) {
               final vr = (node['gridVideoRenderer'] ?? node['videoRenderer']) as Map<String, dynamic>;
-              final videoId = vr['videoId']?.toString() ?? '';
-              final titleRuns = vr['title']?['runs'] as List?;
-              final title = titleRuns?.map((r) => r['text']).join('') ?? vr['title']?['simpleText']?.toString() ?? '';
-              final lengthSec = int.tryParse(vr['lengthSeconds']?.toString() ?? '') ?? 600;
-
-              if (videoId.isNotEmpty && title.isNotEmpty && !seenVideoIds.contains(videoId)) {
-                seenVideoIds.add(videoId);
-                items.add(RawResourceItem(
-                  title: title,
-                  sourceUrl: 'https://www.youtube.com/watch?v=$videoId&list=$playlistId',
-                  durationSeconds: lengthSec,
-                  index: index++,
-                  thumbnailUrl: 'https://i.ytimg.com/vi/$videoId/hqdefault.jpg',
-                ));
+              final item = _parseVideoRendererItem(
+                vr,
+                playlistId: playlistId,
+                index: index,
+                seenVideoIds: seenVideoIds,
+              );
+              if (item != null) {
+                items.add(item);
+                index++;
               }
             } else if (node.containsKey('continuationItemRenderer')) {
               final cir = node['continuationItemRenderer'] as Map<String, dynamic>;
@@ -464,6 +429,7 @@ class YoutubeExtractorService implements IYoutubeClient {
                 durationSeconds: seconds,
                 index: items.length,
                 thumbnailUrl: thumbUrl,
+                author: _extractRendererAuthor(vr),
               ));
             }
           }
@@ -512,35 +478,26 @@ class YoutubeExtractorService implements IYoutubeClient {
       void parseNodes(dynamic node) {
         if (node is Map<String, dynamic>) {
           if (node.containsKey('playlistVideoRenderer')) {
-            final pvr = node['playlistVideoRenderer'] as Map<String, dynamic>;
-            final videoId = pvr['videoId']?.toString() ?? '';
-            final titleRuns = pvr['title']?['runs'] as List?;
-            final title = titleRuns?.map((r) => r['text']).join('') ?? pvr['title']?['simpleText']?.toString() ?? '';
-            final lengthSec = int.tryParse(pvr['lengthSeconds']?.toString() ?? '') ?? 600;
-
-            if (videoId.isNotEmpty && title.isNotEmpty && !seenVideoIds.contains(videoId)) {
-              seenVideoIds.add(videoId);
-              items.add(RawResourceItem(
-                title: title,
-                sourceUrl: 'https://www.youtube.com/watch?v=$videoId&list=$playlistId',
-                durationSeconds: lengthSec,
-                index: index++,
-                thumbnailUrl: 'https://i.ytimg.com/vi/$videoId/hqdefault.jpg',
-              ));
+            final item = _parseVideoRendererItem(
+              node['playlistVideoRenderer'] as Map<String, dynamic>,
+              playlistId: playlistId,
+              index: index,
+              seenVideoIds: seenVideoIds,
+            );
+            if (item != null) {
+              items.add(item);
+              index++;
             }
           } else if (node.containsKey('lockupViewModel')) {
-            final lvm = node['lockupViewModel'] as Map<String, dynamic>;
-            final videoId = lvm['contentId']?.toString() ?? '';
-            final title = lvm['metadata']?['lockupMetadataViewModel']?['title']?['content']?.toString() ?? '';
-            if (videoId.isNotEmpty && title.isNotEmpty && !seenVideoIds.contains(videoId)) {
-              seenVideoIds.add(videoId);
-              items.add(RawResourceItem(
-                title: title,
-                sourceUrl: 'https://www.youtube.com/watch?v=$videoId&list=$playlistId',
-                durationSeconds: 600,
-                index: index++,
-                thumbnailUrl: 'https://i.ytimg.com/vi/$videoId/hqdefault.jpg',
-              ));
+            final item = _parseLockupItem(
+              node['lockupViewModel'] as Map<String, dynamic>,
+              playlistId: playlistId,
+              index: index,
+              seenVideoIds: seenVideoIds,
+            );
+            if (item != null) {
+              items.add(item);
+              index++;
             }
           }
 
@@ -559,6 +516,117 @@ class YoutubeExtractorService implements IYoutubeClient {
       debugPrint('HTML scrape playlist fallback error: $e');
     }
     return items;
+  }
+
+  static RawResourceItem? _parseLockupItem(
+    Map<String, dynamic> lvm, {
+    required String playlistId,
+    required int index,
+    required Set<String> seenVideoIds,
+  }) {
+    final videoId = lvm['contentId']?.toString() ?? '';
+    final title = lvm['metadata']?['lockupMetadataViewModel']?['title']?['content']?.toString() ?? '';
+    if (videoId.isEmpty || title.isEmpty || seenVideoIds.contains(videoId)) {
+      return null;
+    }
+
+    int seconds = 0;
+    String thumbnailUrl = '';
+
+    final sources = lvm['contentImage']?['thumbnailViewModel']?['image']?['sources'] as List?;
+    if (sources != null && sources.isNotEmpty) {
+      thumbnailUrl = sources.last['url']?.toString() ?? '';
+    }
+    if (thumbnailUrl.isEmpty) {
+      thumbnailUrl = 'https://i.ytimg.com/vi/$videoId/hqdefault.jpg';
+    }
+
+    final overlays = lvm['contentImage']?['thumbnailViewModel']?['overlays'] as List?;
+    if (overlays != null) {
+      for (final o in overlays) {
+        final badge = o['thumbnailBottomOverlayViewModel']?['badges']?[0]?['thumbnailBadgeViewModel'];
+        if (badge != null && badge['text'] != null) {
+          final durationStr = badge['text'].toString();
+          final parts = durationStr.split(':').map(int.tryParse).toList();
+          if (parts.length == 2 && parts[0] != null && parts[1] != null) {
+            seconds = (parts[0]! * 60) + parts[1]!;
+          } else if (parts.length == 3 && parts[0] != null && parts[1] != null && parts[2] != null) {
+            seconds = (parts[0]! * 3600) + (parts[1]! * 60) + parts[2]!;
+          }
+        }
+      }
+    }
+
+    seenVideoIds.add(videoId);
+    return RawResourceItem(
+      title: title,
+      sourceUrl: 'https://www.youtube.com/watch?v=$videoId&list=$playlistId',
+      durationSeconds: seconds > 0 ? seconds : 600,
+      index: index,
+      thumbnailUrl: thumbnailUrl,
+      author: _extractLockupAuthor(lvm),
+    );
+  }
+
+  static RawResourceItem? _parseVideoRendererItem(
+    Map<String, dynamic> renderer, {
+    required String playlistId,
+    required int index,
+    required Set<String> seenVideoIds,
+  }) {
+    final videoId = renderer['videoId']?.toString() ?? '';
+    final title = _extractInnertubeText(renderer['title']) ?? '';
+    if (videoId.isEmpty || title.isEmpty || seenVideoIds.contains(videoId)) {
+      return null;
+    }
+
+    final lengthSec = int.tryParse(renderer['lengthSeconds']?.toString() ?? '') ?? 600;
+    seenVideoIds.add(videoId);
+    return RawResourceItem(
+      title: title,
+      sourceUrl: 'https://www.youtube.com/watch?v=$videoId&list=$playlistId',
+      durationSeconds: lengthSec,
+      index: index,
+      thumbnailUrl: 'https://i.ytimg.com/vi/$videoId/hqdefault.jpg',
+      author: _extractRendererAuthor(renderer),
+    );
+  }
+
+  static String? _extractInnertubeText(dynamic node) {
+    if (node is! Map<String, dynamic>) return null;
+    final runs = node['runs'] as List?;
+    if (runs != null && runs.isNotEmpty) {
+      final joined = runs.map((r) => r['text']?.toString() ?? '').join('').trim();
+      if (joined.isNotEmpty) return joined;
+    }
+    final simple = node['simpleText']?.toString().trim();
+    if (simple != null && simple.isNotEmpty) return simple;
+    final content = node['content']?.toString().trim();
+    if (content != null && content.isNotEmpty) return content;
+    return null;
+  }
+
+  static String? _extractRendererAuthor(Map<String, dynamic> renderer) {
+    return _extractInnertubeText(renderer['shortBylineText']) ??
+        _extractInnertubeText(renderer['longBylineText']) ??
+        _extractInnertubeText(renderer['ownerText']);
+  }
+
+  static String? _extractLockupAuthor(Map<String, dynamic> lvm) {
+    final rows = lvm['metadata']?['lockupMetadataViewModel']?['metadata']
+        ?['contentMetadataViewModel']?['metadataRows'] as List?;
+    if (rows == null || rows.isEmpty) return null;
+    final firstRow = rows.first;
+    if (firstRow is Map<String, dynamic>) {
+      final parts = firstRow['metadataParts'] as List?;
+      if (parts != null && parts.isNotEmpty && parts.first is Map<String, dynamic>) {
+        final content = parts.first['text']?['content']?.toString().trim();
+        if (content != null && content.isNotEmpty) {
+          return content;
+        }
+      }
+    }
+    return null;
   }
 
   /// Extracts single video using Innertube Player API (direct JSON, no scraping, resilient on mobile).
