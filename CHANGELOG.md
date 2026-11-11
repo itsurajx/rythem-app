@@ -1,5 +1,9 @@
 # Release
 
+## v2.1.1
+- **Open Lab CSV Export**: Enabled the Download CSV action (`Icons.download_rounded`) for Open Lab in both `ExploreScreen` and `RoadmapDetailScreen` so Open Lab topics can be exported to local storage just like regular trackers.
+- **Metrics 7-Day Beat Graph Bar Color**: Updated non-today active-day bars in the 7-day beat graph (`PerformanceGraphsCard`) to solid `Colors.black` in light mode instead of muted grey.
+
 ## v2.1.0
 - **Self-Paced & Scheduled Tracker Modes**: Added a `Tracker Mode` selector (`With Dates` vs. `No Dates`) when creating new tracks so learners can choose either scheduled start/target deadlines or open-ended, self-paced tracks with zero date pressure.
 - **Per-Tracker CSV Export & Topic Start Tracking**: Added a Download CSV action (`Icons.download_rounded`) inside each main tracker (`RoadmapDetailScreen` and `ExploreScreen` cards) to export `topic-name`, `topic start date`, `topic end date`, and `total number of days taken to finish that topic` to local storage, backed by a clean SQLite v3 `beats.started_at` migration.
