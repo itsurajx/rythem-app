@@ -1,5 +1,9 @@
 # Release
 
+## v2.1.2
+- **YouTube Playlist Chronological Order Fix**: Added `PlaylistOrderNormalizer` with per-video author extraction across Innertube and `youtube_explode_dart` extractors to automatically restore ascending `1..N` ordering when a single channel's playlist is ordered newest-first (`N..1`), while preserving custom multi-author playlists and all other playlists in their exact original sequence.
+- **Documentation**: Updated the AI syllabus formatting prompt and tips in `README.md`.
+
 ## v2.1.1
 - **Open Lab CSV Export**: Enabled the Download CSV action (`Icons.download_rounded`) for Open Lab in both `ExploreScreen` and `RoadmapDetailScreen` so Open Lab topics can be exported to local storage just like regular trackers.
 - **Metrics 7-Day Beat Graph Bar Color**: Updated non-today active-day bars in the 7-day beat graph (`PerformanceGraphsCard`) to solid `Colors.black` in light mode instead of muted grey.

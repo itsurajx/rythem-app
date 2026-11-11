@@ -128,42 +128,76 @@ Rythem's parser extracts custom beat weights while cleanly stripping annotations
 
 ## 🤖 How to Format & Import Any Syllabus Using AI
 
-You can turn any textbook table of contents, syllabus PDF, or course curriculum into an active Rythem track using ChatGPT, Claude, Gemini, or any LLM:
+You can paste the prompt below into Claude, ChatGPT, Gemini, or any LLM with your syllabus filled in at the bottom:
 
 ### 📋 The Master Prompt
 
-```markdown
-You are an expert curriculum orchestrator for the Rythem learning app.
-Please convert the following syllabus or table of contents into clean Markdown:
+````markdown
+You are formatting a study syllabus into a Markdown file that imports into the Rythem learning-tracker app. Follow every rule exactly.
 
-RULES:
-1. Level-1 headers represent major chapters/modules: `# Chapter Name`
-2. Bullet points represent individual learning topics: `- Topic Name`
-3. Specify custom beat weights using brackets: `[X beats]` (e.g. 0.5 for a quick review, 1.0 for a standard lesson, 2.5 for deep architecture, 4.0 for capstones).
-4. Do not include pleasantries, introductory chatter, or backticks—output raw Markdown only.
+## How the app reads the file
+- Every line starting with # (any level) becomes a SUBJECT. There is no nesting, so never use ## for sub-sections.
+- Every other non-empty line becomes a TOPIC. So the file must contain NO title line, intro text, notes, tables, links, dividers (---), code fences or blank bullets.
+- Topic format, one per line: `- Topic title [2.0 beats]`
+- 1 beat = 10 minutes of focused work. Weight range is 0.1 to 50.
+- Never end a topic title with a number, a bracket or a pipe character.
+- Never write an unbulleted line starting with Module, Chapter, Unit, Section, Part or Phase plus a number, because it becomes a subject.
+- Subjects with no topics are dropped.
 
-SYLLABUS CONTENT:
-[PASTE YOUR SYLLABUS, TABLE OF CONTENTS, OR TOPIC LIST HERE]
-```
+## How resources get matched (this is where most mistakes happen)
+The user later attaches a YouTube playlist to each subject. The app compares video titles to topic titles by word overlap (score 0.5 or higher counts as a match). A topic with no matching video becomes a "gap" and keeps its weight. A video with no matching topic becomes a "Mentor Extra".
 
-### 💡 Example Markdown Output
+So:
+1. One subject per resource (playlist, course or book). Name the subject with the words used in the playlist title. The matcher ignores digits, so "Calculus 1" and "Calculus 2" look alike.
+2. One concept per topic, 2 to 6 words, using the words videos actually use. Put sub-topics after a colon, separated by commas or &. Each part is matched separately: `- Joins: Inner, Left & Full Outer [2.0 beats]`
+3. Do not build topics from generic words such as Introduction, Basics, Overview or Tutorial. The matcher ignores them.
+4. If two topics share words, put the more specific topic first, because ties go to the first topic.
+5. If one video covers two ideas (for example "Markov Matrices; Fourier Series"), merge them into one topic.
+6. The matcher treats some words as the same concept and also matches them as substrings. Avoid these in topic titles unless the topic is genuinely about that concept, and never put two topics from the same group in one subject:
+   - calculus, derivatives, integrals, limits
+   - precalculus, algebra, trig, trigonometry
+   - condition, class, loop, init, exception
+   - tree, graph, sort, hash, queue, node
+   - api, requests, pip, git, github, commit, branch
+   - pr (inside probability, product, problem, project, privacy), init (inside definite, infinite, definition)
+   Example: write "Limit Laws & Continuity", not "Limits".
+7. Non-YouTube links (course pages, PDFs) import as a single item, so tell the user to use a YouTube playlist instead.
 
-```markdown
-# Module 1: Foundations & Memory Architecture
-- Pointer Mechanics & Virtual Memory [1.5 beats]
-- Stack vs Heap Allocations [1.0 beat]
-- Cache Lines & Data Locality [2.0 beats]
+## Weights
+- For subjects that will get a video resource: use 1.0 to 2.0 per topic (core topics 2.0). Video lengths replace these weights when matched.
+- Topics the user marks as skip or optional: 0.5.
+- For PROJECT subjects (no resource attached): estimate the hours a fresher needs for each task, multiply by 6, and cap at 50. Make each project its own subject, with build tasks as topics plus a final topic starting "Completion gate:".
 
-# Module 2: Concurrency & Asynchronous Patterns
-- Threads, Mutexes & Atomic Operations [2.5 beats]
-- Lock-Free Queues & Memory Barriers [3.0 beats]
-- Event Loops & Non-Blocking I/O [2.0 beats]
+## What to include and leave out
+- Include only learning topics and project build tasks. Leave out revision tables, link lists, career advice, schedules and notes, unless the user asks otherwise.
+- Do not invent topics. You may split a comma list into separate topics. Flag anything you add.
 
-# Module 3: Distributed Systems & Consensus
-- CAP Theorem & Partition Tolerance [1.5 beats]
-- Raft Consensus Protocol [3.5 beats]
-- Capstone: Building a Replicated Key-Value Store [4.5 beats]
-```
+## Process
+1. If the user has not said which resource goes with each part, ask for the playlist or video titles first.
+2. Reply with a short breakdown: subject list, topic counts, and anything risky (trigger words, vague topics, single-video resources). Wait for approval.
+3. Then output the final file as ONE Markdown code block with nothing else inside it.
+4. After the file, give 3 short instructions: import the file, attach each resource once from inside its own subject, use + on a gap only with a single-video link.
+
+## Example of correct output
+# Python
+- Syntax: Variables, Loops & Functions [2.0 beats]
+- File Handling: CSV & JSON [1.5 beats]
+
+# Project 1: Data-Cleaning Tool
+- Detect missing and invalid rows [18.0 beats]
+- Completion gate: explain the code structure [12.0 beats]
+
+## My syllabus
+[PASTE SYLLABUS HERE]
+
+## My resources (optional)
+[PASTE PLAYLIST OR VIDEO TITLES, ONE PER SUBJECT]
+````
+
+### 💡 Tips for Using It
+- Paste your messy syllabus as it is, including tables. The prompt tells the AI to clean it up.
+- Attach each resource only once. A second attach adds a duplicate copy.
+- If a topic comes out as a gap, check whether the playlist covers it before blaming the file.
 
 ---
 
@@ -219,7 +253,7 @@ git clone https://github.com/itsurajx/rythem-app.git
 cd rythem-app
 
 # 2. Switch to active release branch
-git checkout release/v2.1.1
+git checkout release/v2.1.2
 
 # 3. Install dependencies
 flutter pub get
