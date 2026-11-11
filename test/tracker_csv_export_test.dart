@@ -310,7 +310,7 @@ void main() {
   });
 
   group('CSV Download Icon UI Tests', () {
-    testWidgets('RoadmapDetailScreen shows download icon for main tracker and hides it for Open Lab',
+    testWidgets('RoadmapDetailScreen shows download icon for both main tracker and Open Lab',
         (tester) async {
       final now = DateTime(2026, 11, 1);
       final mainTrack = RoadmapEntity(
@@ -338,6 +338,7 @@ void main() {
         ),
       );
       expect(find.byIcon(Icons.download_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.sync_rounded), findsOneWidget);
 
       await tester.pumpWidget(
         MaterialApp(
@@ -350,28 +351,41 @@ void main() {
           ),
         ),
       );
-      expect(find.byIcon(Icons.download_rounded), findsNothing);
+      expect(find.byIcon(Icons.download_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.sync_rounded), findsNothing);
     });
 
-    testWidgets('ExploreScreen main tracker card displays download icon and triggers export callback',
+    testWidgets('ExploreScreen main tracker and Open Lab cards display download icon and trigger export callback',
         (tester) async {
       final now = DateTime(2026, 11, 1);
+      final openLab = RoadmapEntity(
+        id: RoadmapEntity.openLabId,
+        title: 'Open Lab',
+        createdAt: now,
+        updatedAt: now,
+      );
       final track = RoadmapEntity(
         id: 'rm_card',
         title: 'Algorithms',
         createdAt: now,
         updatedAt: now,
       );
-      RoadmapEntity? exportedRoadmap;
+      final exportedIds = <String>[];
 
       await tester.pumpWidget(
         MaterialApp(
           theme: RythemTheme.darkTheme,
           home: Scaffold(
             body: ExploreScreen(
-              roadmaps: [track],
-              chaptersByRoadmap: const {'rm_card': []},
-              beatsByRoadmap: const {'rm_card': []},
+              roadmaps: [openLab, track],
+              chaptersByRoadmap: const {
+                RoadmapEntity.openLabId: [],
+                'rm_card': [],
+              },
+              beatsByRoadmap: const {
+                RoadmapEntity.openLabId: [],
+                'rm_card': [],
+              },
               onBeatToggled: (_, __) async {},
               onCreateTrack: ({
                 required title,
@@ -382,18 +396,20 @@ void main() {
                 syllabusText,
               }) async {},
               onExportTrackerCsv: (rm) async {
-                exportedRoadmap = rm;
+                exportedIds.add(rm.id);
               },
             ),
           ),
         ),
       );
 
-      expect(find.byIcon(Icons.download_rounded), findsOneWidget);
-      await tester.tap(find.byIcon(Icons.download_rounded));
+      expect(find.byIcon(Icons.download_rounded), findsNWidgets(2));
+      await tester.tap(find.byIcon(Icons.download_rounded).first);
+      await tester.pump();
+      await tester.tap(find.byIcon(Icons.download_rounded).last);
       await tester.pump();
 
-      expect(exportedRoadmap?.id, 'rm_card');
+      expect(exportedIds, [RoadmapEntity.openLabId, 'rm_card']);
     });
   });
 }

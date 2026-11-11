@@ -500,9 +500,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                     themeColors: themeColors,
                     isDark: isDark,
                     onTap: () => _openRoadmapDetail(roadmap),
-                    onExportCsv: !roadmap.isOpenLab
-                        ? () => _exportTrackerCsv(context, roadmap)
-                        : null,
+                    onExportCsv: () => _exportTrackerCsv(context, roadmap),
                     onDelete: widget.onDeleteRoadmap != null
                         ? () => _confirmDeleteRoadmap(context, roadmap)
                         : null,

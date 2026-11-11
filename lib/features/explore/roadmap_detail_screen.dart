@@ -867,43 +867,43 @@ class _RoadmapDetailScreenState extends State<RoadmapDetailScreen> {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          if (!_currentRoadmap.isOpenLab) ...[
-                            const SizedBox(width: 8),
-                            Tooltip(
-                              message: 'Export Tracker CSV',
-                              child: GestureDetector(
-                                onTap: _isExportingCsv ? null : _handleExportCsv,
-                                behavior: HitTestBehavior.opaque,
-                                child: Container(
-                                  width: 32,
-                                  height: 32,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.05),
-                                    border: Border.all(
-                                      color: isDark ? themeColors.glassBorderHighlight : const Color(0x28000000),
-                                      width: 0.9,
-                                    ),
+                          const SizedBox(width: 8),
+                          Tooltip(
+                            message: 'Export Tracker CSV',
+                            child: GestureDetector(
+                              onTap: _isExportingCsv ? null : _handleExportCsv,
+                              behavior: HitTestBehavior.opaque,
+                              child: Container(
+                                width: 32,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.05),
+                                  border: Border.all(
+                                    color: isDark ? themeColors.glassBorderHighlight : const Color(0x28000000),
+                                    width: 0.9,
                                   ),
-                                  child: _isExportingCsv
-                                      ? Center(
-                                          child: SizedBox(
-                                            width: 14,
-                                            height: 14,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 1.8,
-                                              valueColor: AlwaysStoppedAnimation<Color>(themeColors.textPrimary),
-                                            ),
-                                          ),
-                                        )
-                                      : Icon(
-                                          Icons.download_rounded,
-                                          size: 16,
-                                          color: themeColors.textPrimary,
-                                        ),
                                 ),
+                                child: _isExportingCsv
+                                    ? Center(
+                                        child: SizedBox(
+                                          width: 14,
+                                          height: 14,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 1.8,
+                                            valueColor: AlwaysStoppedAnimation<Color>(themeColors.textPrimary),
+                                          ),
+                                        ),
+                                      )
+                                    : Icon(
+                                        Icons.download_rounded,
+                                        size: 16,
+                                        color: themeColors.textPrimary,
+                                      ),
                               ),
                             ),
+                          ),
+                          if (!_currentRoadmap.isOpenLab) ...[
                             const SizedBox(width: 6),
                             Tooltip(
                               message: 'Sync & Remap Resources',
